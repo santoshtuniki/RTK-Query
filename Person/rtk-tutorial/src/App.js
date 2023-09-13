@@ -1,9 +1,9 @@
 // component imports
-import { Users } from './features/users';
+import Users from './features/users/users';
 
 const App = () => {
 	return (
-		<div>
+		<div className='App'>
 			<h1>Hello Everyone</h1>
 			<Users />
 		</div>
