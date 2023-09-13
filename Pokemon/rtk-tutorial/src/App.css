@@ -1,3 +1,28 @@
 .App {
 	text-align: center;
+	margin: 10px;
+	padding: 10px;
+	border: 1px solid black;
+}
+
+table {
+	width: 100%;
+}
+
+table td {
+	text-align: center;
+	width: 33%;
+	border: 1px solid rgb(88, 87, 87)
+}
+
+span {
+	margin-right: 10px;
+}
+
+.table-element {
+	margin-bottom: 10px;
+}
+
+td img {
+	margin: 5px auto;
 }
