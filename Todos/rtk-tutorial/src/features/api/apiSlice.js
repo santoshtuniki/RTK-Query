@@ -16,7 +16,7 @@ export const apiSlice = createApi({
         getTodos: builder.query({
             query: () => '/todos',
             transformResponse: res => res.sort((a, b) => b.id - a.id),
-            providesTags: ['Todos'],
+            // providesTags: ['Todos'],
         }),
 
         addTodo: builder.mutation({
@@ -25,7 +25,24 @@ export const apiSlice = createApi({
                 method: 'POST',
                 body: todo,
             }),
-            invalidatesTags: ['Todos'],
+            // invalidatesTags: ['Todos'],
+
+            // Pessimistic Update - manually update cache data after getting response from the server
+            async onQueryStarted(args, { queryFulfilled, dispatch }) {
+                try {
+                    // getting response from the server
+                    const { data: createdTodo } = await queryFulfilled;
+
+                    // manually update cache data
+                    dispatch(
+                        apiSlice.util.updateQueryData('getTodos', undefined, (draft) => {
+                            draft?.unshift(createdTodo)
+                        })
+                    )
+                } catch (error) {
+                    console.log(error)
+                }
+            }
         }),
 
         updateTodo: builder.mutation({
@@ -34,7 +51,30 @@ export const apiSlice = createApi({
                 method: 'PATCH',
                 body: rest,
             }),
-            invalidatesTags: ['Todos'],
+            // invalidatesTags: ['Todos'],
+
+            // Pessimistic Update - manually update cache data after getting response from the server
+            async onQueryStarted(args, { queryFulfilled, dispatch }) {
+                try {
+                    // getting response from the server
+                    const { data: updatedTodo } = await queryFulfilled;
+
+                    // manually update cache data
+                    dispatch(
+                        apiSlice.util.updateQueryData('getTodos', undefined, (draft) => {
+                            // update
+                            return draft?.map((todo) => {
+                                if(todo.id === args.id){
+                                    return updatedTodo
+                                }
+                                return todo
+                            })
+                        })
+                    )
+                } catch (error) {
+                    console.log(error)
+                }
+            }
         }),
 
         deleteTodo: builder.mutation({
@@ -42,7 +82,25 @@ export const apiSlice = createApi({
                 url: `/todos/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['Todos'],
+            // invalidatesTags: (result, error, arg) => [{ type: 'Todos', id: arg }],
+
+            // Optimistic Update - manually update cache data first, then send it to the server
+            async onQueryStarted(args, { queryFulfilled, dispatch }) {
+                // manually update cache data
+                dispatch(
+                    apiSlice.util.updateQueryData('getTodos', undefined, (draft) => {
+                        // delete
+                        return draft?.filter((todo) => todo.id !== args)
+                    })
+                )
+
+                // send it to the server
+                try {
+                    await queryFulfilled;
+                } catch (error) {
+                    console.log(error)
+                }
+            }
         }),
     })
 })
