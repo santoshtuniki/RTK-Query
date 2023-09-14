@@ -21,7 +21,12 @@ export const contactsApi = createApi({
         // providesTags - for Queries
         contacts: builder.query<Contact[], void>({
             query: () => '/contacts',
-            providesTags: ['Contact'],
+            // providesTags: ['Contact'],
+            providesTags: (result, error, arg) => {
+                return result
+                    ? [...result.map(({ id }) => ({ type: 'Contact' as const, id })), 'Contact']
+                    : ['Contact']
+            },
         }),
 
         getContact: builder.query<Contact, string>({
@@ -40,7 +45,7 @@ export const contactsApi = createApi({
         }),
 
         updateContact: builder.mutation<void, Contact>({
-            query: ({id, ...rest}) => ({
+            query: ({ id, ...rest }) => ({
                 url: `/contacts/${id}`,
                 method: 'PUT',
                 body: rest,
@@ -53,7 +58,8 @@ export const contactsApi = createApi({
                 url: `/contacts/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: ['Contact'],
+            // invalidatesTags: ['Contact'],
+            invalidatesTags: (result, error, arg) => [{ type: 'Contact', id: arg }],
         }),
     })
 });
